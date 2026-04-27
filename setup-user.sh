@@ -29,7 +29,14 @@ chown -R $USERNAME:$USERNAME /home/$USERNAME/.ssh
 # 5. Pastikan SSH key login aktif
 sed -i 's/^#\?PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 
-# 6. Restart SSH service
+# 6. Tambahkan alias cls untuk semua user (global)
+cat > /etc/profile.d/alias.sh <<EOL
+alias cls='clear'
+EOL
+
+chmod +x /etc/profile.d/alias.sh
+
+# 7. Restart SSH service
 systemctl restart ssh || systemctl restart sshd
 
 echo "Selesai. Coba login:"
