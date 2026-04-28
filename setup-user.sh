@@ -4,6 +4,13 @@ set -e
 USERNAME="ubuntu"
 PUBKEY="ISI_PUBLIC_KEY_ANDA_DI_SINI"
 
+ensure_line_in_file() {
+  local line="$1"
+  local file="$2"
+  touch "$file"
+  grep -Fqx "$line" "$file" || echo "$line" >> "$file"
+}
+
 # 1. Buat user ubuntu tanpa password jika belum ada
 if id "$USERNAME" &>/dev/null; then
   echo "User $USERNAME sudah ada"
@@ -29,12 +36,12 @@ chown -R $USERNAME:$USERNAME /home/$USERNAME/.ssh
 # 5. Pastikan SSH key login aktif
 sed -i 's/^#\?PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 
-# 6. Tambahkan alias cls untuk semua user (global)
-cat > /etc/profile.d/alias.sh <<EOL
-alias cls='clear'
-EOL
-
-chmod +x /etc/profile.d/alias.sh
+# 6. Tambahkan alias cls (Bash-only, non-redundan)
+ensure_line_in_file "alias cls='clear'" /etc/bash.bashrc
+ensure_line_in_file "alias cls='clear'" /root/.bashrc
+ensure_line_in_file "alias cls='clear'" "/home/$USERNAME/.bashrc"
+chown "$USERNAME:$USERNAME" "/home/$USERNAME/.bashrc"
+rm -f /etc/profile.d/cls.sh
 
 # 7. Restart SSH service
 systemctl restart ssh || systemctl restart sshd
